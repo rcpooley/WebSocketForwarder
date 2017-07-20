@@ -1,15 +1,67 @@
 <html>
 <head>
     <title>Web Socket Forwarder</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <style>
+        #maintbl {
+            border-collapse: collapse;
+            margin-bottom: 5px;
+        }
+
+        #maintbl th, #maintbl td {
+            padding: 3px;
+            border: 1px solid black;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
-It works!
+<table id="maintbl">
+    <tr>
+        <th>External Port</th>
+        <th>Connector Port</th>
+        <th>Delete</th>
+    </tr>
+</table>
+<input type="text" id="externalPort" placeholder="External Port"/>
+<input type="text" id="connectorPort" placeholder="Connector Port"/>
+<input type="button" value="+" onclick="addRow()"/>
 <script>
-    var connection = new WebSocket('ws://localhost:5000');
+    var $maintbl = $('#maintbl');
+    var $export = $('#externalPort');
+    var $conport = $('#connectorPort');
 
-    connection.onopen = function () {
-        connection.send('this is the dat');
-    };
+    function addRow() {
+        socket.emit('add', {externalPort: parseInt($export.val()), connectorPort: parseInt($conport.val())});
+        $export.val('');
+        $conport.val('');
+    }
+
+    function loadData(data) {
+        var tbl = $maintbl[0];
+        while (tbl.rows.length > 1) {
+            tbl.deleteRow(1);
+        }
+
+        for (var i = 0; i < data.conns.length; i++) {
+            var c = data.conns[i];
+            var row = tbl.insertRow(-1);
+            row.insertCell(-1).innerHTML = c.externalPort;
+            row.insertCell(-1).innerHTML = c.connectorPort;
+            var $cell = $(row.insertCell(-1));
+            var $btn = $(document.createElement('input')).attr('type', 'button').val('Delete');
+            const id = c.id;
+            $btn.click(function () {
+                socket.emit('rm', id);
+            });
+            $cell.html($btn);
+        }
+    }
+
+    var socket = io();
+
+    socket.on('update', loadData);
 </script>
 </body>
 </html>
