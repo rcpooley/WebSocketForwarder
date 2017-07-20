@@ -9,8 +9,6 @@ public class JCMain
 
 	public static void main(String[] args)
 	{
-		args = new String[]{"localhost:5000", "localhost:8080"};
-
 		if (args.length < 2)
 		{
 			System.out.println("Usage: [fromip:fromport] [toip:toport]");
