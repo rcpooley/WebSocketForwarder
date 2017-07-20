@@ -2,12 +2,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.Arrays;
 
 public class JCMain
 {
 
 	public static void main(String[] args)
 	{
+		args = new String[]{"localhost:5000", "localhost:8080"};
+
 		if (args.length < 2)
 		{
 			System.out.println("Usage: [fromip:fromport] [toip:toport]");
@@ -21,11 +24,26 @@ public class JCMain
 		String toIP = spl[0];
 		int toPort = Integer.parseInt(spl[1]);
 
+		byte[] buffer = new byte[1024];
 		while (true)
 		{
+			boolean ready = false;
+			Socket a = null;
+			while (!ready) {
+				try {
+					a = new Socket(fromIP, fromPort);
+
+					int read = a.getInputStream().read(buffer);
+					String str = new String(Arrays.copyOf(buffer, read));
+					if (str.equals("ready")) {
+						ready = true;
+					} else {
+						safeClose(a);
+					}
+				} catch (IOException e) {}
+			}
 			try
 			{
-				Socket a = new Socket(fromIP, fromPort);
 				Socket b = new Socket(toIP, toPort);
 				forward(a, b);
 				forward(b, a);

@@ -43,6 +43,40 @@ io.on('connection', function (socket) {
             externalServer: new SocketServer.Server(conn.externalPort),
             connectorServer: new SocketServer.Server(conn.connectorPort)
         };
+
+        //Handle socket stuff
+        var tmpSocket;
+
+        s.connectorServer.onSocket = function (socket) {
+            tmpSocket = socket;
+            tmpSocket.on('error', function () {});
+        };
+
+        s.externalServer.onSocket = function (socket) {
+            var connSocket = tmpSocket;
+
+            var killAll = function () {
+                socket.destroy();
+                connSocket.destroy();
+            };
+
+            connSocket.on('error', killAll);
+            socket.on('error', killAll);
+
+            connSocket.write('ready');
+
+            connSocket.on('data', function (data) {
+                socket.write(data);
+            });
+
+            socket.on('data', function (data) {
+                connSocket.write(data);
+            });
+        };
+
+        s.connectorServer.start();
+        s.externalServer.start();
+
         setTimeout(function () {
             if (!s.externalServer.listening || !s.connectorServer.listening) {
                 s.externalServer.close();
