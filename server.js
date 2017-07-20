@@ -4,6 +4,9 @@ var bodyParser = require('body-parser');
 var fs = require('fs');
 var config = require('./config.json');
 
+//SocketServer module
+var SocketServer = require('./socketserver');
+
 //Setup middleware
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
@@ -26,3 +29,5 @@ app.get('*', function (req, res) {
 http.listen(config.httpport, function () {
     console.log('Listening on *:' + config.httpport);
 });
+
+new SocketServer.Server(5000);
